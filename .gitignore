@@ -1,0 +1,9 @@
+*.doc
+ez_setup.py
+matches.txt
+sandbox.py
+/DAPOS
+/monakeb
+/db/*.db
+/db/random.py
+/test/dont_push
