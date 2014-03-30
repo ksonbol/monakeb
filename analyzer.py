@@ -24,6 +24,7 @@ def __main__():
     unvoweled_verbs = load_patterns('verbs/unvoweled/unvoweled_verbal_patterns')
     tool_words = load('tool_words')
     proper_nouns = load('proper_nouns')
+    roots = load_roots()
     seg = Segmentor(word, prefixes, suffixes)
     matches = seg.split_string()
     analyzer = Analyzer(prefixes, suffixes, unvoweled_nouns, unvoweled_verbs,
@@ -33,8 +34,9 @@ def __main__():
         # print "match"
         # print analyzer.prefix.unvoweled_form, analyzer.stem, analyzer.suffix.unvoweled_form
         roots = analyzer.find_root()
-        for root in roots:
-            print "root:", root
+        return roots
+        # for root in roots:
+        #     print "root:", root
 
 
 def load(file_name):
@@ -54,6 +56,18 @@ def check_exceptional(word, exceptional_words):
     for pattern in exceptional_words:
         if pattern.unvoweled_form == word:
             return pattern.stem
+
+def load_roots():
+    roots = set()
+    with codecs.open(DB_PATH + 'roots.txt', 'r', 'utf8') as f:
+        for line in f:
+            if not line.isspace():
+                line = line.strip()
+                if line in roots:
+                    print line
+                else:
+                    roots.add(line)
+    return roots
 
 class Segmentor:
     def __init__(self, string, prefix_list, suffix_list):

@@ -26,6 +26,13 @@ class TestLoadPatterns(unittest.TestCase):
     self.assertEqual(len(self.unvoweled_verbs[4]), 120)
     self.assertEqual(len(self.unvoweled_verbs[9]), 26)
 
+class TestLoadRoots(unittest.TestCase):
+  def setUp(self):
+    self.roots = load_roots()
+
+  def test_length(self):
+    print len(self.roots)
+    self.assertEqual(len(self.roots), 9341)
 
 class TestBaseClass(unittest.TestCase):
   def setUp(self):
