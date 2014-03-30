@@ -31,8 +31,8 @@ class TestLoadRoots(unittest.TestCase):
     self.roots = load_roots()
 
   def test_length(self):
-    print len(self.roots)
-    self.assertEqual(len(self.roots), 9341)
+    roots_length = 9245
+    self.assertEqual(len(self.roots), roots_length)
 
 class TestBaseClass(unittest.TestCase):
   def setUp(self):

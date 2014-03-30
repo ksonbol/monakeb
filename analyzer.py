@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-import re, itertools, booby, codecs, datrie
+import re, itertools, booby, codecs, datrie, pdb
 from booby import Model, fields, serialize
 from db.booby_models.booby_models import *
 from utils import ARABIC_CHARS
@@ -8,7 +8,7 @@ from utils import ARABIC_CHARS
 OUTFILE = "/home/karim/monakeb/matches.txt"
 DB_PATH = '/home/karim/monakeb/db/booby_models/'
 
-WORD = u'ورأيته'
+WORD = u'أحبك'
 
 
 def __main__():
@@ -16,8 +16,7 @@ def __main__():
     exceptional_words = load('exceptional_words')
     exceptional = check_exceptional(word, exceptional_words)  # Check if Lafz Al-Galala
     if exceptional:
-        print exceptional
-        return
+        return word
     prefixes = load('prefixes')
     suffixes = load('suffixes_reversed')
     unvoweled_nouns = load_patterns('nouns/unvoweled/unvoweled_nominal_patterns')
@@ -28,15 +27,17 @@ def __main__():
     seg = Segmentor(word, prefixes, suffixes)
     matches = seg.split_string()
     analyzer = Analyzer(prefixes, suffixes, unvoweled_nouns, unvoweled_verbs,
-                        tool_words, proper_nouns)
+                        tool_words, proper_nouns, roots)
+    possible_roots = set()
     for match in matches:
         analyzer.prefix, analyzer.stem, analyzer.suffix = match
-        # print "match"
-        # print analyzer.prefix.unvoweled_form, analyzer.stem, analyzer.suffix.unvoweled_form
         roots = analyzer.find_root()
-        return roots
-        # for root in roots:
-        #     print "root:", root
+        for root in roots:
+            possible_roots.add(root)
+    
+    for root in possible_roots:
+        print root
+        # return roots
 
 
 def load(file_name):
@@ -63,10 +64,7 @@ def load_roots():
         for line in f:
             if not line.isspace():
                 line = line.strip()
-                if line in roots:
-                    print line
-                else:
-                    roots.add(line)
+                roots.add(line)
     return roots
 
 class Segmentor:
@@ -191,7 +189,7 @@ class Segmentor:
 
 class Analyzer:
     def __init__(self, prefixes, suffixes, unvoweled_nouns,
-                 unvoweled_verbs, tool_words, proper_nouns):
+                 unvoweled_verbs, tool_words, proper_nouns, roots):
         self.prefixes = prefixes
         self.suffixes = suffixes
         self.unvoweled_nouns = unvoweled_nouns
@@ -199,6 +197,7 @@ class Analyzer:
         self.tool_words = tool_words
         self.proper_nouns = proper_nouns
         self.prefix, self.stem, self.suffix = "", "", ""
+        self.dict_roots = roots
 
     def check_tool_words(self):
         for tool_word in self.tool_words:
@@ -213,10 +212,10 @@ class Analyzer:
     def find_root(self):
         tool_word = self.check_tool_words()
         if tool_word:
-            return [tool_word.unvoweled_form]
+            return normalize_hamza([tool_word.unvoweled_form])
         proper_noun = self.check_proper_nouns()
         if proper_noun:
-            return [proper_noun.unvoweled_form]
+            return normalize_hamza([proper_noun.unvoweled_form])
         length = len(self.stem)
         if self.prefix.p_class[0] == "N" or self.suffix.s_class[0] == "N":
             roots = self.find_in(self.unvoweled_nouns[length])
@@ -224,7 +223,9 @@ class Analyzer:
             roots = self.find_in(self.unvoweled_verbs[length])
         else:
             roots = self.find_in(self.unvoweled_nouns[length] + self.unvoweled_verbs[length])
-        return roots
+        normalized = normalize_hamza(roots)
+        checked = self.check_dictionary(normalized)
+        return checked
 
     def find_in(self, patterns):
         length = len(self.stem)
@@ -251,6 +252,21 @@ class Analyzer:
             possible_roots.append(root)
         regex = r'^%s$' %regex
         return regex, possible_roots
+
+
+    def check_dictionary(self, roots):
+        checked = set()
+        for root in roots:
+            if root in self.dict_roots:
+                checked.add(root)
+        return checked
+
+def normalize_hamza(roots):
+    normalized = []
+    hamzas_translation = dict((ord(char), ord(u'ء')) for char in u'أإؤئ')
+    for root in roots:
+        normalized.append(root.translate(hamzas_translation))
+    return normalized
 
 
 if __name__ == "__main__":
