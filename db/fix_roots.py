@@ -13,7 +13,7 @@ def show_repeated():
         else:
           roots.add(line)
 
-  print "Repeated roots:"
+  print len(repeated), "Repeated roots:"
   for root in repeated:
     print root
 
@@ -39,4 +39,4 @@ def normailize_hamza():
         w.write(new_line)
 
 if __name__ == '__main__':
-  normailize_hamza()
+  show_repeated()
