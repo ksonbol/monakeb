@@ -3,19 +3,19 @@
 import re, itertools, booby, codecs, datrie, pdb
 from booby import Model, fields, serialize
 from db.booby_models.booby_models import *
-from utils import ARABIC_CHARS
+from utils import ARABIC_CHARS, DB_PATH
 
 OUTFILE = "/home/karim/monakeb/matches.txt"
-DB_PATH = '/home/karim/monakeb/db/booby_models/'
 
-WORD = u'أحبك'
-
+WORD = u'الحب'
+# انفتاح
 
 def __main__():
     word = WORD
     exceptional_words = load('exceptional_words')
     exceptional = check_exceptional(word, exceptional_words)  # Check if Lafz Al-Galala
     if exceptional:
+        print word
         return word
     prefixes = load('prefixes')
     suffixes = load('suffixes_reversed')
@@ -211,11 +211,12 @@ class Analyzer:
 
     def find_root(self):
         tool_word = self.check_tool_words()
+        res = []
         if tool_word:
             return normalize_hamza([tool_word.unvoweled_form])
         proper_noun = self.check_proper_nouns()
         if proper_noun:
-            return normalize_hamza([proper_noun.unvoweled_form])
+            res.extend(normalize_hamza([proper_noun.unvoweled_form]))
         length = len(self.stem)
         if self.prefix.p_class[0] == "N" or self.suffix.s_class[0] == "N":
             roots = self.find_in(self.unvoweled_nouns[length])
@@ -224,21 +225,31 @@ class Analyzer:
         else:
             roots = self.find_in(self.unvoweled_nouns[length] + self.unvoweled_verbs[length])
         normalized = normalize_hamza(roots)
-        checked = self.check_dictionary(normalized)
-        return checked
+        res.extend(self.check_dictionary(normalized))
+        return res
 
     def find_in(self, patterns):
-        length = len(self.stem)
         possible_roots = []
         for pattern in patterns:
-            regex, roots = self.find_regex_and_roots(pattern, length)
+            regex = self.get_regex(pattern)
             if re.match(regex, self.stem):
+                roots = self.get_roots_from_pattern(pattern)
+                print "Pattern:", pattern.value, "regex:", regex, "stem", self.stem
                 possible_roots.extend(roots)
         return possible_roots
 
-    def find_regex_and_roots(self, pattern, length):
-        regex = pattern.value[:]
-        possible_roots = []
+    def get_regex(self, pattern):
+        regex = u''
+        for char in pattern.value:
+            if char in [u'ف', u'ع', u'ل']:
+                regex += u'.'
+            else:
+                regex += char
+        regex = r'^%s$' %regex
+        return regex
+
+    def get_roots_from_pattern(self, pattern):
+        roots = []
         possible_rules = pattern.rules.split()
         for rule in possible_rules:
             root = ''
@@ -246,13 +257,10 @@ class Analyzer:
                 if char.isdigit():
                     index = int(char)
                     root += self.stem[index-1]
-                    regex = regex[:index-1] + '.' + regex[index:]
                 else:
                     root += char
-            possible_roots.append(root)
-        regex = r'^%s$' %regex
-        return regex, possible_roots
-
+            roots.append(root)
+        return roots
 
     def check_dictionary(self, roots):
         checked = set()
@@ -264,6 +272,7 @@ class Analyzer:
 def normalize_hamza(roots):
     normalized = []
     hamzas_translation = dict((ord(char), ord(u'ء')) for char in u'أإؤئ')
+    hamzas_translation[ord(u'ى')] = ord(u'ا')
     for root in roots:
         normalized.append(root.translate(hamzas_translation))
     return normalized

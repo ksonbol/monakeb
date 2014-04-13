@@ -4,8 +4,9 @@ import booby, codecs
 from booby import Model, fields, serialize
 from monakeb.db.peewee_models.special_words import ToolWord
 from ..booby_models import ToolWordB
+from monakeb.utils import DB_PATH
 
-OUT_FILE = '/home/karim/monakeb/db/booby_models/tool_words.txt'
+OUT_FILE = DB_PATH + 'tool_words.txt'
 
 words = []
 query = ToolWord.select()

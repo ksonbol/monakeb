@@ -4,8 +4,9 @@ import booby, codecs
 from booby import Model, fields, serialize
 from monakeb.db.peewee_models.suffixes import *
 from ..booby_models import SuffixB
+from monakeb.utils import DB_PATH
 
-OUT_FILE = '/home/karim/monakeb/db/booby_models/suffixes_reversed.txt'
+OUT_FILE = DB_PATH + 'suffixes_reversed.txt'
 
 suffixes = []
 query = Suffix.select()

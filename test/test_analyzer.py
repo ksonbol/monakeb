@@ -146,8 +146,6 @@ class TestFindRootNoun(TestAnalyzer):
     self.analyzer.suffix = self.suffixes[1] # Kaf Al-Mokhatab
     self.analyzer.stem = u'كتاب'
     roots = self.analyzer.find_root()
-    # roots may repeat if the same pattern exists in both nouns and verbs
-    # like 'فعلل'
     self.assertIn(u'كتب', roots)
 
 # NEXT STEP:

@@ -4,8 +4,9 @@ import booby, codecs
 from booby import Model, fields, serialize
 from monakeb.db.peewee_models.special_words import ProperNoun
 from ..booby_models import ProperNounB
+from monakeb.utils import DB_PATH
 
-OUT_FILE = '/home/karim/monakeb/db/booby_models/proper_nouns.txt'
+OUT_FILE = DB_PATH + 'proper_nouns.txt'
 
 words = []
 query = ProperNoun.select()

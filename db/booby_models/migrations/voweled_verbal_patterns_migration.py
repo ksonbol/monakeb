@@ -4,6 +4,7 @@ import booby, codecs
 from booby import Model, fields, serialize
 from monakeb.db.peewee_models.verbs import VoweledVerbalPattern
 from ..booby_models import *
+from monakeb.utils import DB_PATH
 
 words = {2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: []}
 query = VoweledVerbalPattern.select()
@@ -22,7 +23,7 @@ for word in query:
 
 
 for i in range(2, 10):
-	OUT_FILE = "/home/karim/monakeb/db/booby_models/verbs/voweled/voweled_verbal_patterns%s.txt" %i
+	OUT_FILE = DB_PATH + "verbs/voweled/voweled_verbal_patterns%s.txt" %i
 	print i, len(words[i])
 	with codecs.open(OUT_FILE , 'w', 'utf8') as f:
 		serialize.serialize(words[i], f)

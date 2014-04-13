@@ -4,8 +4,9 @@ import booby, codecs
 from booby import Model, fields, serialize
 from monakeb.db.peewee_models.prefixes import *
 from ..booby_models import PrefixB
+from monakeb.utils import DB_PATH
 
-OUT_FILE = '/home/karim/monakeb/db/booby_models/prefixes.txt'
+OUT_FILE = DB_PATH + 'prefixes.txt'
 
 prefixes = []
 query = Prefix.select()

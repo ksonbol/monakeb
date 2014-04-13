@@ -1,3 +1,4 @@
+DB_PATH = '/home/karim/monakeb/db/booby_models/'
 
 ARABIC_CHARS = [u"\u0621",    # ARABIC LETTER HAMZA
                 u"\u0622",    # ARABIC LETTER ALEF WITH MADDA ABOVE

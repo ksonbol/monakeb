@@ -4,8 +4,9 @@ import booby, codecs
 from booby import Model, fields, serialize
 from monakeb.db.peewee_models.special_words import ExceptionalWord
 from ..booby_models import ExceptionalWordB
+from monakeb.utils import DB_PATH
 
-OUT_FILE = '/home/karim/monakeb/db/booby_models/exceptional_words.txt'
+OUT_FILE = DB_PATH + 'exceptional_words.txt'
 
 words = []
 query = ExceptionalWord.select()
