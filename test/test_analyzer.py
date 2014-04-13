@@ -31,7 +31,7 @@ class TestLoadRoots(unittest.TestCase):
     self.roots = load_roots()
 
   def test_length(self):
-    roots_length = 9245
+    roots_length = 10836
     self.assertEqual(len(self.roots), roots_length)
 
 class TestBaseClass(unittest.TestCase):
@@ -54,8 +54,10 @@ class TestAnalyzer(TestBaseClass):
     self.unvoweled_verbs = load_patterns('verbs/unvoweled/unvoweled_verbal_patterns')
     self.tool_words = load('tool_words')
     self.proper_nouns = load('proper_nouns')
+    self.roots = load_roots()
     self.analyzer = Analyzer(self.prefixes, self.suffixes, self.unvoweled_nouns, 
-                             self.unvoweled_verbs, self.tool_words, self.proper_nouns)
+                             self.unvoweled_verbs, self.tool_words, 
+                             self.proper_nouns, self.roots)
 
 class TestCheckToolWords(TestAnalyzer):
   def test_match(self):
@@ -79,34 +81,37 @@ class TestCheckProperNouns(TestAnalyzer):
     proper_noun = self.analyzer.check_proper_nouns()
     self.assertIsNone(proper_noun)
 
-class TestFindRegexAndRoots(TestAnalyzer):
+class TestGetRegex(TestAnalyzer):
   '''
   find_regex_and_roots should return the corresponding regex pf pattern
   and the possible roots even if a mismatch occurs
   '''
   def setUp(self):
-    super(TestFindRegexAndRoots, self).setUp()
+    super(TestGetRegex, self).setUp()
+
+  def test_noun(self):
     self.pattern = self.unvoweled_nouns[4][1]
-    self.length = 4
-
-  def test_mismatch(self):
-    self.analyzer.stem = u'لعبة'
-    regex, roots = self.analyzer.find_regex_and_roots(self.pattern, self.length)
+    regex = self.analyzer.get_regex(self.pattern)
     self.assertEqual(regex.encode('utf8'), r'^آ.ا.$')
-    self.assertIn(u'ءعة', roots)
 
-  def test_match(self):
-    self.analyzer.stem = u'آثار'
-    regex, roots = self.analyzer.find_regex_and_roots(self.pattern, self.length)
-    self.assertEqual(regex.encode('utf8'), r'^آ.ا.$')
-    self.assertIn(u'ءثر', roots)
-
-  def test_special_case(self):
-    self.analyzer.stem = u'رأيت'
+  def test_verb(self):
     self.pattern = self.unvoweled_verbs[4][68]
-    regex, roots = self.analyzer.find_regex_and_roots(self.pattern, self.length)
+    regex = self.analyzer.get_regex(self.pattern)
     self.assertEqual(regex.encode('utf8'), r'^...ت$') 
-    self.assertIn(u'رأي', roots)
+
+class TestGetRootFromPattern(TestAnalyzer):
+
+    def test_noun(self):
+      self.pattern = self.unvoweled_nouns[4][1]
+      self.analyzer.stem = u'آثار'
+      roots = self.analyzer.get_roots_from_pattern(self.pattern)
+      self.assertIn(u'ءثر', roots)
+
+    def test_special_case(self):
+      self.pattern = self.unvoweled_verbs[4][68]
+      self.analyzer.stem = u'رأيت'
+      roots = self.analyzer.get_roots_from_pattern(self.pattern)
+      self.assertIn(u'رأي', roots)
 
 class TestFindInNouns(TestAnalyzer):
   def setUp(self):

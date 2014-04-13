@@ -234,7 +234,7 @@ class Analyzer:
             regex = self.get_regex(pattern)
             if re.match(regex, self.stem):
                 roots = self.get_roots_from_pattern(pattern)
-                print "Pattern:", pattern.value, "regex:", regex, "stem", self.stem
+                # print "Pattern:", pattern.value, "regex:", regex, "stem", self.stem
                 possible_roots.extend(roots)
         return possible_roots
 
