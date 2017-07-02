@@ -74,3 +74,15 @@ class VoweledVerbalPatternB(Base):
 	cas = fields.String()
 	ncg = fields.String()
 	trans = fields.String()
+
+class NominalRootB(Base):
+	value = fields.String()
+	vect = fields.String()
+	root_type = fields.Integer()
+	char = fields.String()
+
+class VerbalRootB(Base):
+	value = fields.String()
+	vect = fields.String()
+	root_type = fields.Integer()
+	char = fields.String()

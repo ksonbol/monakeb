@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 
 import re, itertools, booby, codecs, datrie, pdb
-from booby import Model, fields, serialize
 from db.booby_models.booby_models import *
-from utils import ARABIC_CHARS, DB_PATH
+from utils import ARABIC_CHARS
+from loaders import *
 
 OUTFILE = "/home/karim/monakeb/matches.txt"
 
-WORD = u'الحب'
+WORD = u'تنمية'
 # انفتاح
 
 def __main__():
@@ -24,10 +24,12 @@ def __main__():
     tool_words = load('tool_words')
     proper_nouns = load('proper_nouns')
     roots = load_roots()
+    nominal_roots = load_nominal_roots()
+    verbal_roots = load_verbal_roots()
     seg = Segmentor(word, prefixes, suffixes)
     matches = seg.split_string()
     analyzer = Analyzer(prefixes, suffixes, unvoweled_nouns, unvoweled_verbs,
-                        tool_words, proper_nouns, roots)
+                        tool_words, proper_nouns, roots, nominal_roots, verbal_roots)
     possible_roots = set()
     for match in matches:
         analyzer.prefix, analyzer.stem, analyzer.suffix = match
@@ -40,32 +42,11 @@ def __main__():
         # return roots
 
 
-def load(file_name):
-    with codecs.open(DB_PATH + file_name + '.txt', 'r', 'utf8') as f:
-        objects = serialize.deserialize(f)
-    return objects
-
-def load_patterns(file_name_prefix):
-    patterns = {}
-    for i in range(2, 10):
-        file_name = DB_PATH + file_name_prefix + str(i) + ".txt"
-        with codecs.open(file_name, 'r', 'utf8') as f:
-            patterns[i] = serialize.deserialize(f)
-    return patterns
 
 def check_exceptional(word, exceptional_words):
     for pattern in exceptional_words:
         if pattern.unvoweled_form == word:
             return pattern.stem
-
-def load_roots():
-    roots = set()
-    with codecs.open(DB_PATH + 'roots.txt', 'r', 'utf8') as f:
-        for line in f:
-            if not line.isspace():
-                line = line.strip()
-                roots.add(line)
-    return roots
 
 class Segmentor:
     def __init__(self, string, prefix_list, suffix_list):
@@ -189,7 +170,8 @@ class Segmentor:
 
 class Analyzer:
     def __init__(self, prefixes, suffixes, unvoweled_nouns,
-                 unvoweled_verbs, tool_words, proper_nouns, roots):
+                 unvoweled_verbs, tool_words, proper_nouns, roots,
+                 nominal_roots, verbal_roots):
         self.prefixes = prefixes
         self.suffixes = suffixes
         self.unvoweled_nouns = unvoweled_nouns
@@ -198,6 +180,9 @@ class Analyzer:
         self.proper_nouns = proper_nouns
         self.prefix, self.stem, self.suffix = "", "", ""
         self.dict_roots = roots
+        self.nominal_roots = nominal_roots
+        self.verbal_roots = verbal_roots
+        self.roots_and_patterns = []
 
     def check_tool_words(self):
         for tool_word in self.tool_words:
@@ -225,7 +210,8 @@ class Analyzer:
         else:
             roots = self.find_in(self.unvoweled_nouns[length] + self.unvoweled_verbs[length])
         normalized = normalize_hamza(roots)
-        res.extend(self.check_dictionary(normalized))
+        dictionary_checked = self.check_dictionary(normalized)
+        res.extend(self.check_patterns())
         return res
 
     def find_in(self, patterns):
@@ -260,6 +246,7 @@ class Analyzer:
                 else:
                     root += char
             roots.append(root)
+            self.roots_and_patterns.append((root, pattern))
         return roots
 
     def check_dictionary(self, roots):
@@ -269,11 +256,37 @@ class Analyzer:
                 checked.add(root)
         return checked
 
+    def check_patterns(self):
+    # TODO - Fix this!
+        roots = []
+        for root, pattern in self.roots_and_patterns:
+            char = root[0]
+            found = True
+            new_root = None
+            if root in nominal_roots[char]:
+                found = False
+                found_root = nominal_roots[char][root]
+                for pattern_id in pattern.ids:
+                    if pattern_id in found_root.vect:
+                        found = True
+                        new_root = root
+                        break
+            if not new_root:
+                if root in verbal_roots[char]:
+                    found = False
+                    found_root = verbal_roots[char][root]
+                    for pattern_id in pattern.ids:
+                        if pattern_id in root.vect:
+                            found = True
+                            break
+            if found:
+                roots.append(root)
+        return roots
+
 def normalize_hamza(roots):
     normalized = []
     hamzas_translation = dict((ord(char), ord(u'ء')) for char in u'أإؤئ')
     hamzas_translation[ord(u'ى')] = ord(u'ا')
-    for root in roots:
         normalized.append(root.translate(hamzas_translation))
     return normalized
 
