@@ -7,3 +7,4 @@ sandbox.py
 /db/*.db
 /db/random.py
 /test/dont_push
+*.pyc
